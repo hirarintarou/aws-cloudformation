@@ -1,0 +1,1 @@
+Compress-Archive -Path .\python -DestinationPath logger_layer.zip

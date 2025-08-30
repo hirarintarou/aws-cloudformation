@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: WAF ACL restricting CloudFront access to specific IPs
+
+Parameters:
+  AllowedIPAddresses:
+    Type: CommaDelimitedList
+    Default: "221.246.67.105/32"
+    Description: List of allowed IPv4 addresses (e.g. 203.0.113.1,203.0.113.2)
+
+Resources:
+  AllowedIPSet:
+    Type: AWS::WAFv2::IPSet
+    Properties:
+      Name: AllowedIPSet
+      Scope: CLOUDFRONT
+      IPAddressVersion: IPV4
+      Addresses: !Ref AllowedIPAddresses
+      Description: Allowed IP addresses for CloudFront
+
+  WebACL:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Name: ReactAppACL
+      Scope: CLOUDFRONT
+      DefaultAction:
+        Block: {}
+      VisibilityConfig:
+        SampledRequestsEnabled: true
+        CloudWatchMetricsEnabled: true
+        MetricName: ReactAppACL
+      Description: "Allow only specific IPs to access React CloudFront"
+      Rules:
+        - Name: AllowSpecificIPs
+          Priority: 0
+          Action:
+            Allow: {}
+          Statement:
+            IPSetReferenceStatement:
+              Arn: !GetAtt AllowedIPSet.Arn
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: AllowSpecificIPs
