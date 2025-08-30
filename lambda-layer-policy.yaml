@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: logger_test Lambda (S3 Source)
+
+Resources:
+  LoggerLayer:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      LayerName: logger
+      Description: Logger layer from S3
+      Content:
+        S3Bucket: 864546685978-dev
+        S3Key: logger_layer.zip
+      CompatibleRuntimes:
+        - python3.12
+
+  LoggerTestLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: logger_test
+      Handler: lambda_function.lambda_handler
+      Role: arn:aws:iam::864546685978:role/lambda-execution-role
+      Runtime: python3.12
+      Code:
+        S3Bucket: 864546685978-dev
+        S3Key: lambda.zip
+      Timeout: 30
+      Layers:
+        - !Ref LoggerLayer
+      Environment:
+        Variables:
+          LOG_LEVEL: INFO
+
+  LoggerTestLambda2:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: logger_test2
+      Handler: lambda_function2.lambda_handler2
+      Role: arn:aws:iam::864546685978:role/lambda-execution-role
+      Runtime: python3.12
+      Code:
+        S3Bucket: 864546685978-dev
+        S3Key: lambda.zip
+      Timeout: 30
+      Layers:
+        - !Ref LoggerLayer
+      Environment:
+        Variables:
+          LOG_LEVEL: DEBUG
+
+  LoggerTestPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: logger_test_policy
+      Roles:
+        - lambda-execution-role
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:GetItem
+              - dynamodb:Scan
+            Resource:
+              - arn:aws:dynamodb:ap-northeast-1:864546685978:table/aa1
+              - arn:aws:dynamodb:ap-northeast-1:864546685978:table/bb1
+              - arn:aws:dynamodb:ap-northeast-1:864546685978:table/cc1
